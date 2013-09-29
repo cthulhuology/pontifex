@@ -32,6 +32,7 @@ Pontifex = (AmqpUrl) ->
 		self.connection.on 'ready', () ->
 			self[protocol] ?= require "pontifex.#{protocol}"
 			self[protocol]?.apply(self[protocol], [self,Url].concat(args))
+		self
 	self.exchanges = {}
 	self.queues = {}
 	self.create = (exchange,key,queue) ->
