@@ -1,0 +1,21 @@
+{
+	"author": "David Goehrig",
+	"name": "pontifex",
+	"license" : "MIT",
+	"description": "Creates bridges between protocols and AMQP",
+	"version": "0.0.1",
+	"repository": {
+		"url": "http://github.com/cthulhuology/pontifex"
+	},
+	"main": "./lib/Pontifex.coffee",
+	"bin": {},
+	"dependencies": {
+		"opifex" : "0.0.2"
+	},
+	"devDependencies": {},
+	"optionalDependencies": {},
+	"engines": {
+		"node": "*",
+		"coffee": "*"
+	}
+}
