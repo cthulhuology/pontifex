@@ -3,7 +3,7 @@
 	"name": "pontifex",
 	"license" : "MIT",
 	"description": "Creates bridges between protocols and AMQP",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": {
 		"url": "http://github.com/cthulhuology/pontifex"
 	},
