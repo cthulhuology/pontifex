@@ -66,6 +66,15 @@ Pontifex = (AmqpUrl) ->
 		else
 			self.queues[queue]?.destroy()
 			self.queues[queue] = false
+	self.subscribe = (queue,listener) ->
+		if not self.queues[queue]
+			self.connection?.queue queue, (Queue) ->
+				self.queues[queue] = Queue
+				Queue.subscribe { ack: false, prefetchCount: 1 }, (message, headers, deliveryInfo) ->
+					listener(message.data.toString())
+		else
+			self.queues[queue].subscribe { ack: false, prefetchCount: 1 },  (message, headers, deliveryInfo) ->
+				listener(message.data.toString())
 	self
 
 module.exports = Pontifex
