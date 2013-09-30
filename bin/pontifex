@@ -1,0 +1,6 @@
+#!/usr/bin/env coffee
+
+[ proto, amqp ] = process.argv[2...]
+Pontifex = require 'pontifex'
+Pontifex(amqp)(proto)
+
