@@ -44,7 +44,6 @@ Pontifex = (AmqpUrl) ->
 				Queue.bind exchange, key
 	self.read = (queue,fun) ->
 		# reads a message from the given queue and returns the result to the supplied callback
-		console.log "Fetching a message from AMQP"
 		if not self.queues[queue]
 			self.connection?.queue queue, (Queue) ->
 				self.queues[queue] = Queue
@@ -53,19 +52,14 @@ Pontifex = (AmqpUrl) ->
 			self.queues[queue].get({ noack: true }, fun)
 	self.update = (exchange,key,msg) ->
 		# publishes a message to the given exchange with the supplied routing key
-		console.log "publishing to #{exchange} / ${key} value: #{msg}"
 		if not self.exchanges[exchange]
-			self.connection?.exchange exchange, (Exchange) ->
-				console.log "declared exchange #{exchange}"
+			self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true }, (Exchange) ->
 				self.exchanges[exchange] = Exchange
 				Exchange.publish(key,msg)
-				console.log "publishing to #{key} the #{msg}"
 		else
-			console.log "publishing to #{key} the #{msg}"
 			self.exchanges[exchange].publish(key,msg)
 	self.delete = (queue) ->
 		# deletes a queue, unbinding it in the proces
-		console.log "Deleting #{queue}"
 		if not self.queues[queue]
 			self.connection?.queue queue, (Queue) ->
 				Queue.destroy()
