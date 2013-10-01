@@ -16,9 +16,12 @@
 amqp = require 'amqp'
 
 Pontifex = (AmqpUrl) ->
-	[ proto, user, password, host, port, domain ] = AmqpUrl.match(///([^:]+)://([^:]+):([^@]+)@([^:]+):(\d+)/([^\/]*)///)[1...]
+	[ proto, user, password, host, port ] = AmqpUrl.match(///([^:]+)://([^:]+):([^@]+)@([^:]+):(\d+)///)[1...]
 	self = (Url,args...) ->
-		[ protocol] = Url.match(///([^:]+):///)[1...]
+		[ protocol ] = Url.match(///([^:]+):///)[1...]
+		self[protocol] ?= require "pontifex.#{protocol}"
+		self[protocol]?.apply(self[protocol], [self,Url].concat(args))
+	self.connect = (domain, setup) ->
 		self.connection = amqp.createConnection
 			host: host,
 			port: port,
@@ -30,12 +33,12 @@ Pontifex = (AmqpUrl) ->
 		self.connection.on 'end', () ->
 			console.log "Connection closed"
 		self.connection.on 'ready', () ->
-			self[protocol] ?= require "pontifex.#{protocol}"
-			self[protocol]?.apply(self[protocol], [self,Url].concat(args))
+			console.log "Connection ready"
+			setup()
 		self
 	self.exchanges = {}
 	self.queues = {}
-	self.create = (exchange,key,queue) ->
+	self.route = (exchange,key,queue) ->
 		self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true },  (Exchange) ->
 			self.exchanges[exchange] = Exchange
 		if queue
@@ -50,7 +53,7 @@ Pontifex = (AmqpUrl) ->
 				Queue.get({ noack: true }, fun)
 		else
 			self.queues[queue].get({ noack: true }, fun)
-	self.update = (exchange,key,msg) ->
+	self.send = (exchange,key,msg) ->
 		# publishes a message to the given exchange with the supplied routing key
 		if not self.exchanges[exchange]
 			self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true }, (Exchange) ->

@@ -10,12 +10,10 @@
 	"main": "./lib/Pontifex.coffee",
 	"bin": { "pontifex" : "./bin/pontifex" },
 	"dependencies": {
-		"opifex" : "0.0.2"
 	},
 	"devDependencies": {},
 	"optionalDependencies": {},
 	"engines": {
-		"node": "*",
-		"coffee": "*"
+		"node": "*"
 	}
 }
