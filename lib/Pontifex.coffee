@@ -39,7 +39,7 @@ Pontifex = (AmqpUrl) ->
 	self.exchanges = {}
 	self.queues = {}
 	self.route = (exchange,key,queue) ->
-		self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true },  (Exchange) ->
+		self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true, closeChannelOnUnsubscribe: true },  (Exchange) ->
 			self.exchanges[exchange] = Exchange
 		if queue
 			self.connection?.queue queue, (Queue) ->
@@ -56,7 +56,7 @@ Pontifex = (AmqpUrl) ->
 	self.send = (exchange,key,msg) ->
 		# publishes a message to the given exchange with the supplied routing key
 		if not self.exchanges[exchange]
-			self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true }, (Exchange) ->
+			self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true, closeChannelOnUnsubscribe: true }, (Exchange) ->
 				self.exchanges[exchange] = Exchange
 				Exchange.publish(key,msg)
 		else
@@ -69,15 +69,27 @@ Pontifex = (AmqpUrl) ->
 		else
 			self.queues[queue]?.destroy()
 			self.queues[queue] = false
-	self.subscribe = (queue,listener) ->
+	self.unsubscribe = (queue,socket) ->
+		if self.queues[queue]
+			console.log "unsubscribing #{socket.ctag} from #{queue}"
+			self.queues[queue].unsubscribe socket.ctag
+	self.subscribe = (queue,socket,listener) ->
 		if not self.queues[queue]
 			self.connection?.queue queue, (Queue) ->
 				self.queues[queue] = Queue
-				Queue.subscribe { ack: false, prefetchCount: 1 }, (message, headers, deliveryInfo) ->
+				(Queue.subscribe { ack: false, prefetchCount: 1 }, (message, headers, deliveryInfo) ->
 					listener(message.data.toString())
+				).addCallback (ok) ->
+					socket.ctag = ok.consumerTag
+					console.log "subscribed #{socket.ctag} from #{queue}"
+					socket.send "[ \"connected\", \"#{queue}\" ]"
 		else
-			self.queues[queue].subscribe { ack: false, prefetchCount: 1 },  (message, headers, deliveryInfo) ->
+			(self.queues[queue].subscribe { ack: false, prefetchCount: 1 },  (message, headers, deliveryInfo) ->
 				listener(message.data.toString())
+			).addCallback (ok) ->
+				socket.ctag = ok.consumerTag
+				console.log "subscribed #{socket.ctag} from #{queue}"
+				socket.send "[ \"connected\", \"#{queue}\" ]"
 	self
 
 module.exports = Pontifex
