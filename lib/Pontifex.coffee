@@ -82,7 +82,7 @@ Pontifex = (AmqpUrl) ->
 				).addCallback (ok) ->
 					socket.ctag = ok.consumerTag
 					console.log "subscribed #{socket.ctag} from #{queue}"
-					socket.send "[ \"connected\", \"#{queue}\" ]"
+				#	socket.send "[ \"connected\", \"#{queue}\" ]"
 		else
 			(self.queues[queue].subscribe { ack: false, prefetchCount: 1 },  (message, headers, deliveryInfo) ->
 				listener(message.data.toString())
