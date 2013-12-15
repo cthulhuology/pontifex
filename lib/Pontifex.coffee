@@ -30,8 +30,6 @@ Pontifex = (AmqpUrl) ->
 			vhost: domain || '/'
 		self.connection.on 'error', (Message) ->
 			console.log "Connection error", Message
-			self.connection.end()
-			self.connect(domain,setup)
 		self.connection.on 'end', () ->
 			console.log "Connection closed"
 			self.connect(domain,setup)
