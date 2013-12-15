@@ -30,8 +30,12 @@ Pontifex = (AmqpUrl) ->
 			vhost: domain || '/'
 		self.connection.on 'error', (Message) ->
 			console.log "Connection error", Message
+			self.connection.close()
+			self.connect(domain,setup)
 		self.connection.on 'end', () ->
 			console.log "Connection closed"
+			self.connection.close()
+			self.connect(domain,setup)
 		self.connection.on 'ready', () ->
 			console.log "Connection ready"
 			setup()
@@ -42,13 +46,13 @@ Pontifex = (AmqpUrl) ->
 		self.connection?.exchange exchange, { durable: false, type: 'topic', autoDelete: true, closeChannelOnUnsubscribe: true },  (Exchange) ->
 			self.exchanges[exchange] = Exchange
 		if queue
-			self.connection?.queue queue, (Queue) ->
+			self.connection?.queue queue, { arguments: { "x-message-ttl" : 60000 } }, (Queue) ->
 				self.queues[queue] = Queue
 				Queue.bind exchange, key
 	self.read = (queue,fun) ->
 		# reads a message from the given queue and returns the result to the supplied callback
 		if not self.queues[queue]
-			self.connection?.queue queue, (Queue) ->
+			self.connection?.queue queue, { arguments: { "x-message-ttl" : 60000 } }, (Queue) ->
 				self.queues[queue] = Queue
 				Queue.get({ noack: true }, fun)
 		else
@@ -64,7 +68,7 @@ Pontifex = (AmqpUrl) ->
 	self.delete = (queue) ->
 		# deletes a queue, unbinding it in the proces
 		if not self.queues[queue]
-			self.connection?.queue queue, (Queue) ->
+			self.connection?.queue queue, { arguments: { "x-message-ttl" : 60000 } }, (Queue) ->
 				Queue.destroy()
 		else
 			self.queues[queue]?.destroy()
@@ -75,7 +79,7 @@ Pontifex = (AmqpUrl) ->
 			self.queues[queue].unsubscribe socket.ctag
 	self.subscribe = (queue,socket,listener) ->
 		if not self.queues[queue]
-			self.connection?.queue queue, (Queue) ->
+			self.connection?.queue queue, { arguments: { "x-message-ttl" : 60000 } }, (Queue) ->
 				self.queues[queue] = Queue
 				(Queue.subscribe { ack: false, prefetchCount: 1 }, (message, headers, deliveryInfo) ->
 					listener(message.data.toString())
