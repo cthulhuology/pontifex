@@ -79,14 +79,14 @@ Pontifex = (AmqpUrl) ->
 			self.connection?.queue queue, { arguments: { "x-message-ttl" : 60000 } }, (Queue) ->
 				self.queues[queue] = Queue
 				(Queue.subscribe { ack: false, prefetchCount: 1 }, (message, headers, deliveryInfo) ->
-					listener(message.data.toString())
+					listener(message.data)
 				).addCallback (ok) ->
 					socket.ctag = ok.consumerTag
 					console.log "subscribed #{socket.ctag} from #{queue}"
 				#	socket.send "[ \"connected\", \"#{queue}\" ]"
 		else
 			(self.queues[queue].subscribe { ack: false, prefetchCount: 1 },  (message, headers, deliveryInfo) ->
-				listener(message.data.toString())
+				listener(message.data)
 			).addCallback (ok) ->
 				socket.ctag = ok.consumerTag
 				console.log "subscribed #{socket.ctag} from #{queue}"
